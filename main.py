@@ -6,6 +6,7 @@ from google import genai
 from google.genai import types
 
 from call_functions import available_functions
+from functions.call_function import call_function
 from prompts import system_prompt
 
 
@@ -30,20 +31,27 @@ def main():
     config = types.GenerateContentConfig(system_instruction=system_prompt, tools=[available_functions])
     response = client.models.generate_content(model=model_name, contents=messages, config=config)
 
-    if verbose:
+    if response.function_calls:
+        handle_calls(response, verbose)
+    elif verbose:
         print_verbose(prompt, response)
     else:
         print_normal(response)
 
+def handle_calls(response, verbose):
+    for call in response.function_calls:
+        print(f"Calling function: {call.name}({call.args})")
+        result = call_function(call)
+
+        if not result.parts[0].function_response.response:
+            raise Exception("No response from function call")
+        
+        if verbose:
+            print(f"-> {result.parts[0].function_response.response}")
 
 def print_normal(response):
-    if response.function_calls:
-        for call in response.function_calls:
-            print(f"Calling function: {call.name}({call.args})")
-    else:
-        print(f"LLM RESPONSE: \n{response.text}")
-
-
+    print(f"LLM RESPONSE: \n{response.text}")
+            
 def print_verbose(prompt, response):
     print(f"User prompt: {prompt}")
     print_normal(response)

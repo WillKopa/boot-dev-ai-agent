@@ -37,12 +37,12 @@ def test_get_file_content():
     tests.append(get_file_content(working_directory, "main.py"))
     tests.append(get_file_content(working_directory, "pkg/calculator.py"))
     tests.append(get_file_content(working_directory, "/bin/cat"))
-    tests.append(get_file_content(working_directory, "lorem.txt"))
+    tests.append(get_file_content(working_directory, "lorem_long.txt"))
     return tests
 
 def test_write_file():
     tests=[]
-    tests.append(write_file(working_directory, "lorem_short.txt", "wait, this isn't lorem ipsum"))
+    tests.append(write_file(working_directory, "lorem.txt", "wait, this isn't lorem ipsum"))
     tests.append(write_file(working_directory, "pkg/morelorem.txt", "lorem upsum dolor sit amet"))
     tests.append(write_file(working_directory, "/tmp/temp.txt", "this should not be allowed"))
     return tests
