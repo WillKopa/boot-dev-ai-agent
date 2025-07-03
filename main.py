@@ -5,6 +5,10 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+from call_functions import available_functions
+from prompts import system_prompt
+
+
 if len(sys.argv) < 2 or sys.argv[1] == "--verbose":
     print("Must provide a prompt for the agent")
     sys.exit(1)
@@ -14,6 +18,8 @@ def main():
     verbose = "--verbose" in sys.argv
     api_key = os.environ.get("GEMINI_API_KEY")
     client = genai.Client(api_key=api_key)
+
+    model_name = "gemini-2.0-flash-001"
     
     prompt = sys.argv[1]
 
@@ -21,7 +27,8 @@ def main():
         types.Content(role="user", parts=[types.Part(text=prompt)])
     ]
 
-    response = client.models.generate_content(model="gemini-2.0-flash-001", contents=messages)
+    config = types.GenerateContentConfig(system_instruction=system_prompt, tools=[available_functions])
+    response = client.models.generate_content(model=model_name, contents=messages, config=config)
 
     if verbose:
         print_verbose(prompt, response)
@@ -30,7 +37,11 @@ def main():
 
 
 def print_normal(response):
-    print(response.text)
+    if response.function_calls:
+        for call in response.function_calls:
+            print(f"Calling function: {call.name}({call.args})")
+    else:
+        print(f"LLM RESPONSE: \n{response.text}")
 
 
 def print_verbose(prompt, response):
